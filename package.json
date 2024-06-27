@@ -1,5 +1,8 @@
 {
   "devDependencies": {
+    "bootstrap": "^4.0.0-beta",
+    "jquery": "^3.7.1",
+    "popper.js": "^1.16.1",
     "unplugin-auto-import": "^0.17.6",
     "unplugin-vue-components": "^0.27.1"
   },
