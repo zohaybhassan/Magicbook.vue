@@ -4,11 +4,11 @@
       <img src="@/assets/Online Book Library.png" alt="Online Book Library" class="logo mb-3">
       <div class="signup-form w-75">
         <h1 class="mb-4">Sign Up</h1>
-        <form @submit.prevent="signup">
-          <input v-model="name" type="name" placeholder="Enter your full name" required class="form-control mb-2">
+        <form @submit.prevent="performSignup">
+          <input v-model="name" type="text" placeholder="Enter your full name" required class="form-control mb-2">
           <input v-model="email" type="email" placeholder="Enter your email" required class="form-control mb-2">
           <input v-model="password" type="password" placeholder="Enter your password" required class="form-control mb-2">
-          <input v-model="confirmpassword" type="confirmpassword" placeholder="Confirm your password" required class="form-control mb-2">
+          <input v-model="confirmpassword" type="password" placeholder="Confirm your password" required class="form-control mb-2">
           <button type="submit" class="btn btn-success w-100 mb-2">Sign Up</button>
           <p class="text-center">Already have an account? <router-link to="/">Login here</router-link></p>
         </form>
@@ -21,18 +21,33 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
+
 export default {
   name: 'SignupPage',
   data() {
     return {
+      name: '',
       email: '',
-      password: ''
+      password: '',
+      confirmpassword: ''
     };
   },
   methods: {
-    signup() {
-      console.log('Attempting to sign up with', this.email, this.password);
-      // Add your signup logic here
+    ...mapActions(['registerUser']),
+    async performSignup() {
+      try {
+        const success = await this.registerUser({ name: this.name, email: this.email, password: this.password, confirmpassword: this.confirmpassword });
+        if (success) {
+          alert('Signup successful. Please login.');
+          this.$router.push('/login');
+        } else {
+          alert('Signup failed. Please try again.');
+        }
+      } catch (error) {
+        console.error('Signup error:', error);
+        alert('An error occurred. Please try again.');
+      }
     }
   }
 }
@@ -59,6 +74,7 @@ export default {
   position: relative;
   padding: 0px !important;
 }
+
 .signup-form {
   width: 100%;
   max-width: 320px;

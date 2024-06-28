@@ -19,6 +19,8 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
+
 export default {
   name: 'LoginPage',
   data() {
@@ -28,9 +30,15 @@ export default {
     };
   },
   methods: {
-    login() {
-      console.log('Attempting to login with', this.email, this.password);
-      // Add your authentication logic here
+    ...mapActions(['login']),
+    async performLogin() {
+      try {
+        await this.login({ email: this.email, password: this.password });
+        this.$router.push('/home');
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Invalid credentials or an error occurred.');
+      }
     }
   }
 }
