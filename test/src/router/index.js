@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import store from '../store';  // Import the store to access state
+import store from '../store';  
 import HomePage from '../views/HomePage.vue';
 import LoginPage from '../views/LoginPage.vue';
 import SignupPage from '../views/SignupPage.vue';
@@ -21,12 +21,7 @@ const routes = [
     component: SignupPage,
     meta: { requiresUnauth: true }  // Only accessible if not authenticated
   },
-  {
-    path: '/home',
-    name: 'Home',
-    component: HomePage,
-    meta: { requiresAuth: true }  // Requires user to be authenticated
-  }
+  
 ];
 
 const router = createRouter({

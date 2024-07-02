@@ -4,7 +4,7 @@
       <img src="@/assets/Online Book Library.png" alt="Online Book Library" class="logo mb-3">
       <div class="login-form w-75">
         <h1 class="mb-4">Login</h1>
-        <form @submit.prevent="login">
+        <form @submit.prevent="performLogin">
           <input v-model="email" type="email" placeholder="Email" required class="form-control mb-2">
           <input v-model="password" type="password" placeholder="Password" required class="form-control mb-2">
           <button type="submit" class="btn btn-primary  w-100 mb-2">Login</button>
@@ -19,27 +19,37 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'LoginPage',
-  data() {
-    return {
-      email: '',
-      password: ''
-    };
-  },
-  methods: {
-    ...mapActions(['login']),
-    async performLogin() {
+  setup() {
+    const email = ref('');
+    const password = ref('');
+    const store = useStore();
+    const router = useRouter();
+
+    const performLogin = async () => {
       try {
-        await this.login({ email: this.email, password: this.password });
-        this.$router.push('/home');
+        const success = await store.dispatch('login', { email: email.value, password: password.value });
+        if (success) {
+          router.push('/home');
+        } else {
+          alert('Invalid credentials or an error occurred.');
+        }
       } catch (error) {
         console.error('Login error:', error);
         alert('Invalid credentials or an error occurred.');
       }
-    }
+    };
+
+    return {
+      email,
+      password,
+      performLogin
+    };
   }
 }
 </script>

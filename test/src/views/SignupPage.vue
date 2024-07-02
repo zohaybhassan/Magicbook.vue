@@ -21,26 +21,31 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'SignupPage',
-  data() {
-    return {
-      name: '',
-      email: '',
-      password: '',
-      confirmpassword: ''
-    };
-  },
-  methods: {
-    ...mapActions(['registerUser']),
-    async performSignup() {
+  setup() {
+    const name = ref('');
+    const email = ref('');
+    const password = ref('');
+    const confirmpassword = ref('');
+    const store = useStore();
+    const router = useRouter();
+
+    const performSignup = async () => {
       try {
-        const success = await this.registerUser({ name: this.name, email: this.email, password: this.password, confirmpassword: this.confirmpassword });
+        const success = await store.dispatch('registerUser', { 
+          name: name.value, 
+          email: email.value, 
+          password: password.value, 
+          confirmpassword: confirmpassword.value 
+        });
         if (success) {
           alert('Signup successful. Please login.');
-          this.$router.push('/login');
+          router.push('/login');
         } else {
           alert('Signup failed. Please try again.');
         }
@@ -48,7 +53,15 @@ export default {
         console.error('Signup error:', error);
         alert('An error occurred. Please try again.');
       }
-    }
+    };
+
+    return {
+      name,
+      email,
+      password,
+      confirmpassword,
+      performSignup
+    };
   }
 }
 </script>

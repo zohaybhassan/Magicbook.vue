@@ -3,7 +3,7 @@ import axios from 'axios';
 import persistState from './persist';
 
 export default createStore({
-  plugins: [persistState(500)], // Applying the persistState plugin with 500ms debounce
+  plugins: [persistState(500)], // Applying the persistState plugin with 500ms debounce, which is default
   state: {
     user: null
   },
@@ -45,6 +45,7 @@ export default createStore({
       } catch (error) {
         console.error('Signup error:', error);
         return false;
+        
       }
     },
     logout({ commit }) {
