@@ -94,6 +94,13 @@ export default {
   margin-top: -120px; 
 }
 
+.signup-form h1 {
+  font-weight: bold;
+  font-size:large;
+  text-decoration: underline;
+  color: #28a745;
+}
+
 .background-image {
   width: 100%;
   height: 100%;
@@ -135,12 +142,12 @@ button:hover {
   background-color: #218838;
 }
 
-router-link {
+a {
   color: #28a745;
   text-decoration: none;
 }
 
-router-link:hover {
+a:hover {
   text-decoration: underline;
 }
 </style>

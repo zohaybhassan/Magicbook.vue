@@ -34,8 +34,9 @@ export default {
     const performLogin = async () => {
       try {
         const success = await store.dispatch('login', { email: email.value, password: password.value });
+        console.log(store.state.user)
         if (success) {
-          router.push('/home');
+          router.push('/admin');
         } else {
           alert('Invalid credentials or an error occurred.');
         }
@@ -67,6 +68,7 @@ export default {
   align-items: center;
   justify-content: center;
 }
+
 .right-container {
   background-image: url('@/assets/ffml.jpg');
   background-size: cover;
@@ -74,10 +76,19 @@ export default {
   position: relative;
   padding: 0px !important;
 }
+
 .login-form {
   width: 100%;
   max-width: 320px;
   margin-top: -120px; 
+}
+
+.login-form h1 {
+  font-weight: bold;
+  font-size:large;
+  text-decoration: underline;
+  color: #0056b3;
+
 }
 
 .background-image {
@@ -121,12 +132,12 @@ button:hover {
   background-color: #003580;
 }
 
-router-link {
+a {
   color: #0056b3;
   text-decoration: none;
 }
 
-router-link:hover {
+a:hover {
   text-decoration: underline;
 }
 </style>

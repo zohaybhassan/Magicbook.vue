@@ -1,8 +1,9 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
-import store from '../store';  
-import HomePage from '../views/HomePage.vue';
+import store from '../store';
 import LoginPage from '../views/LoginPage.vue';
 import SignupPage from '../views/SignupPage.vue';
+import AdminDashboard from '../views/AdminDashboard.vue';
 
 const routes = [
   {
@@ -21,7 +22,12 @@ const routes = [
     component: SignupPage,
     meta: { requiresUnauth: true }  // Only accessible if not authenticated
   },
-  
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: AdminDashboard,
+    meta: { requiresAuth: true }  // Requires user to be authenticated
+  }
 ];
 
 const router = createRouter({
@@ -29,17 +35,21 @@ const router = createRouter({
   routes
 });
 
-// Navigation guards to check authentication
+//Navigation guards to check authentication
 router.beforeEach((to, from, next) => {
   const isAuthenticated = store.getters.isAuthenticated;
+  const currentUser = store.getters.currentUser;
+
   if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
-    // Redirect to login page if not authenticated and trying to access a restricted page
     next('/login');
   } else if (to.matched.some(record => record.meta.requiresUnauth) && isAuthenticated) {
-    // Redirect to home page if authenticated and trying to access login or signup
-    next('/home');
+    if (currentUser.isAdmin) {
+      next('/admin');
+    } else {
+      next('/home');
+    }
   } else {
-    next();  // proceed to route
+    next();
   }
 });
 
