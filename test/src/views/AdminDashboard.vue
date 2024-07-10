@@ -24,16 +24,16 @@
               <a href="#" class="text-gray-300 hover:text-white">Books Category</a>
             </li>
             <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white">Books Section</a>
-            </li>
-            <li class="px-6">
               <a href="#" class="text-gray-300 hover:text-white">Manage Sales</a>
             </li>
             <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white">Transaction History</a>
+              <a href="#" class="text-gray-300 hover:text-white">Books Section</a>
             </li>
             <li class="px-6">
               <a href="#" class="text-gray-300 hover:text-white">User Management</a>
+            </li>
+            <li class="px-6">
+              <a href="#" class="text-gray-300 hover:text-white">Transaction History</a>
             </li>
           </ul>
         </nav>
@@ -44,7 +44,7 @@
     <div :class="['main-content', { 'expanded': sidebarOpen }]">
       <!-- Header -->
       <div class="header flex items-center justify-between w-full mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Book Details</h1>
+        <h1 class="text-4xl font-bold text-gray-800">Book Details</h1>
         <button @click="logout" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200">Logout</button>
       </div>
 
@@ -216,7 +216,10 @@ export default {
 .main-content {
   padding: 20px;
   transition: margin-left 0.3s ease-in-out;
-  z-index: 30; /* Ensuring the main content is below the sidebar */
+  z-index: 40; /* Ensuring the main content is below the sidebar */
+  background-image: url(@/assets/bg.jpg); /* Replace with your actual image path */
+  background-size: cover; /* Ensure the background covers the entire content area */
+  background-position: center; /* Center the background image */
 }
 
 .main-content.expanded {
@@ -259,7 +262,10 @@ tbody tr:hover {
 button:focus {
   outline: none;
 }
+h1{
+color: #f0f0f0
 
+}
 .bg-smoke-light {
   background-color: rgba(0, 0, 0, 0.5);
 }
