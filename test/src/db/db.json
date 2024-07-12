@@ -5,11 +5,7 @@
       "email": "user@nextmail.com",
       "password": "1234"
     },
-    {
-      "id": "b36c",
-      "email": "user@nextmail.com",
-      "password": "1234"
-    },
+    
     {
       "id": "80ca",
       "email": "demo@internee.pk",
@@ -100,12 +96,6 @@
       "title": "blind lake",
       "author": "JK ROWLING",
       "year": 2018
-    },
-    {
-      "id": "0ed0",
-      "title": "sir zeehsna vue skills",
-      "author": "JK ROWLING",
-      "year": 2024
     }
   ]
 }
