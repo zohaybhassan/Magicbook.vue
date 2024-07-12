@@ -13,7 +13,7 @@ export default createStore({
   mutations: {
     setUser(state, user) {
       state.user = user;
-      localStorage.setItem('user', JSON.stringify(user)); // Persist user data
+      sessionStorage.setItem('user', JSON.stringify(user)); // Persist user data
     },
     setBooks(state, books) {
       state.books = books;
@@ -76,10 +76,10 @@ export default createStore({
     },
     logout({ commit }) {
       commit('setUser', null);
-      localStorage.removeItem('user'); // Clear user data from local storage
+      sessionStorage.removeItem('user'); // Clear user data from local storage
     },
     autoLogin({ commit }) {
-      const userData = JSON.parse(localStorage.getItem('user'));
+      const userData = JSON.parse(sessionStorage.getItem('user'));
       if (userData) {
         commit('setUser', userData);
       }

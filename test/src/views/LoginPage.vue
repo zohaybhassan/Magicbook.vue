@@ -13,7 +13,7 @@
       </div>
     </div>
     <div class="right-container position-relative">
-      <div class="overlay-text text-center">Welcome to MagicBook</div>
+      <div class="overlay-text text-center">Welcome to MagicBook</div> 
     </div>
   </div>
 </template>
