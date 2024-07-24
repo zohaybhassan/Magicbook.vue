@@ -41,11 +41,13 @@
     </div>
 
     <!-- Main Content -->
-    <div :class="['main-content', { 'expanded': sidebarOpen }]">
+    <div :class="['main-content', { 'expanded': !sidebarOpen }]">
       <!-- Header -->
-      <div class="header flex items-center justify-between w-full mb-6">
-        <h1 class="text-4xl font-bold text-gray-800">Book Details</h1>
-        <button @click="logout" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200">Logout</button>
+      <div class="header flex items-center justify-between">
+        <div class="flex-grow flex items-center justify-center">
+          <h1 class="book-details-heading">Book Details</h1>
+        </div>
+        <button @click="logout" class="logout-button">Logout</button>
       </div>
 
       <!-- Add Book Button -->
@@ -129,9 +131,11 @@
   </div>
 </template>
 
+
 <script>
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
 
 export default {
   data() {
@@ -161,11 +165,18 @@ export default {
       this.sidebarOpen = !this.sidebarOpen;
     },
     createBook() {
-      this.books.push({ ...this.newBook, id: Date.now() });
-      localStorage.setItem('books', JSON.stringify(this.books));
-      this.newBook = { title: '', year: '', author: '' };
-      this.showAddBookModal = false;
-    },
+    this.books.push({ ...this.newBook, id: Date.now() });
+    localStorage.setItem('books', JSON.stringify(this.books));
+    this.newBook = { title: '', year: '', author: '' };
+    this.showAddBookModal = false;
+    Swal.fire({
+      icon: 'success',
+      title: 'Book Added',
+      text: 'The book has been successfully added.',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  },
     editBook(book) {
       this.editBookData = { ...book };
     },
@@ -177,14 +188,22 @@ export default {
         this.editBookData = {};
       }
     },
-    deleteBook(bookId) {
-      this.books = this.books.filter(book => book.id !== bookId);
-      localStorage.setItem('books', JSON.stringify(this.books));
-    }
+   deleteBook(bookId) {
+    this.books = this.books.filter(book => book.id !== bookId);
+    localStorage.setItem('books', JSON.stringify(this.books));
+    Swal.fire({
+      icon: 'success',
+      title: 'Deleted!',
+      text: 'The book has been deleted.',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  } 
+  
+      
   }
 };
 </script>
-
 <style scoped>
 /* Custom scrollbar styles */
 .sidebar::-webkit-scrollbar {
@@ -204,30 +223,85 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, left 0.3s ease; /* Added transition for left */
   z-index: 40; /* Ensuring the sidebar is on top */
   overflow-y: auto; /* Allow scrolling if content overflows */
 }
 
 .sidebar.hidden {
-  transform: translateX(-100%);
+  width: 0;
+  transform: translateX(-250px);
+  left: -250px; /* Hide sidebar by moving it to the left */
 }
 
 .main-content {
+  margin-left: 250px;
   padding: 20px;
-  transition: margin-left 0.3s ease-in-out;
-  z-index: 40; /* Ensuring the main content is below the sidebar */
-  background-image: url(@/assets/bg.jpg); /* Replace with your actual image path */
-  background-size: cover; /* Ensure the background covers the entire content area */
-  background-position: center; /* Center the background image */
+  transition: margin-left 0.4s ease-in-out, width 0.4s ease-in-out, transform 0.4s ease-in-out; /* Smooth transition */
+  z-index: 30; /* Ensuring the main content is below the sidebar */
+  position: relative; /* Ensure the overlay is positioned correctly */
+  overflow-y: auto; /* Add vertical scrollbar when content overflows */
+  overflow-x: hidden; /* Prevent horizontal overflow */
+}
+
+.main-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(@/assets/adminbg.jpg); /* Replace with your actual image path */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* Keep the background image fixed */
+  opacity: 1; /* Adjust opacity here */
+  filter: brightness(50%); /* Adjust brightness here */
+  z-index: -1; /* Position the overlay behind the content */
 }
 
 .main-content.expanded {
-  margin-left: 250px; /* Shifts content to the right when sidebar is open */
+  margin-left: 0;
+  width: 100%;
+  transform: translateX(0); /* Ensuring smooth transition */
 }
 
 .header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center heading */
+  position: relative;
+  width: 100%;
   margin-bottom: 20px;
+}
+
+.book-details-heading {
+  font-family: 'Lobster', cursive; /* Apply the custom font */
+  font-size: 2rem; /* Adjust the size as needed */
+  color: #ffffff;
+  text-align: center;
+  border: 2px solid #ffffff; /* White border */
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px 20px; /* Padding around the text */
+  background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent background */
+}
+
+.logout-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #e53e3e; /* Red background */
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem; /* Slightly smaller font size */
+  transition: background-color 0.2s ease;
+}
+
+.logout-button:hover {
+  background-color: #c53030; /* Darker red on hover */
 }
 
 .table-container {
@@ -262,10 +336,7 @@ tbody tr:hover {
 button:focus {
   outline: none;
 }
-h1{
-color: #f0f0f0
 
-}
 .bg-smoke-light {
   background-color: rgba(0, 0, 0, 0.5);
 }

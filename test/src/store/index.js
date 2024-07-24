@@ -2,8 +2,6 @@
 import { createStore } from 'vuex';
 import axios from 'axios';
 
-const ADMIN_EMAIL = 'admin@example.com'; // Admin email
-const ADMIN_PASSWORD = 'admin123'; // Admin password
 
 export default createStore({
   state: {
