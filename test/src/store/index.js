@@ -1,17 +1,23 @@
-// src/store/index.js
 import { createStore } from 'vuex';
-import axios from 'axios';
+import bcrypt from 'bcryptjs';
+import persistState from './persist';
+import { auth, db } from '../main';
+import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 
+const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_PASSWORD_HASH = bcrypt.hashSync('admin123', 10);
 
 export default createStore({
+  plugins: [persistState(500)], 
   state: {
     user: null,
-    books: []
+    books: [],
+    genres: ['Fiction', 'Non-Fiction', 'Science Fiction', 'Fantasy', 'Mystery', 'Thriller', 'Biography', 'Other']
   },
   mutations: {
     setUser(state, user) {
       state.user = user;
-      sessionStorage.setItem('user', JSON.stringify(user)); // Persist user data
     },
     setBooks(state, books) {
       state.books = books;
@@ -31,84 +37,102 @@ export default createStore({
   },
   actions: {
     async login({ commit }, { email, password }) {
-      try {
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-          commit('setUser', { email, isAdmin: true });
+      if (email === ADMIN_EMAIL && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
+        commit('setUser', { email, isAdmin: true });
+        return true;
+      } else {
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          commit('setUser', { email: userCredential.user.email, uid: userCredential.user.uid });
           return true;
-        }
-        
-        const response = await axios.get('http://localhost:3000/users', {
-          params: { email, password }
-        });
-        if (response.data.length > 0) {
-          commit('setUser', response.data[0]);
-          return true;
-        } else {
-          console.error('Login failed: Invalid credentials');
+        } catch (error) {
+          console.error('Login error:', error);
           return false;
         }
-      } catch (error) {
-        console.error('Login error:', error);
-        return false;
       }
     },
-    async registerUser({ commit }, { email, password }) {
+    async registerUser({ commit }, { email, password, confirmPassword }) {
+      if (password !== confirmPassword) {
+        console.error('Signup error: Passwords do not match');
+        return false; 
+      }
+
       try {
-        const existingUserResponse = await axios.get('http://localhost:3000/users', {
-          params: { email }
-        });
-
-        if (existingUserResponse.data.length > 0) {
-          console.error('Signup error: Email already registered');
-          return false;
-        }
-
-        const user = { email, password };
-        const response = await axios.post('http://localhost:3000/users', user);
-        commit('setUser', response.data);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        commit('setUser', { email: userCredential.user.email, uid: userCredential.user.uid });
         return true;
       } catch (error) {
         console.error('Signup error:', error);
         return false;
       }
     },
-    logout({ commit }) {
-      commit('setUser', null);
-      sessionStorage.removeItem('user'); // Clear user data from local storage
+    async logout({ commit }) {
+      try {
+        await signOut(auth);
+        commit('setUser', null);
+        sessionStorage.removeItem('vuex-state'); 
+        return true;
+      } catch (error) {
+        console.error('Logout error:', error);
+        return false;
+      }
     },
     autoLogin({ commit }) {
-      const userData = JSON.parse(sessionStorage.getItem('user'));
-      if (userData) {
-        commit('setUser', userData);
+      const userData = JSON.parse(sessionStorage.getItem('vuex-state'));
+      if (userData && userData.user) {
+        commit('setUser', userData.user);
       }
     },
     async fetchBooks({ commit }) {
       try {
-        const response = await axios.get('http://localhost:3000/books');
-        commit('setBooks', response.data);
+        const querySnapshot = await getDocs(collection(db, 'books'));
+        const books = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        commit('setBooks', books);
       } catch (error) {
         console.error('Failed to fetch books:', error);
       }
     },
     async createBook({ commit }, book) {
       try {
-        const response = await axios.post('http://localhost:3000/books', book);
-        commit('addBook', response.data);
+        const bookData = {
+          author: book.author,
+          title: book.title,
+          year: book.year,
+          coverPath: book.coverPath,
+          coverUrl: book.coverUrl,
+          pdfPath: book.pdfPath,
+          pdfUrl: book.pdfUrl,
+          userId: book.userId 
+        };
+        const docRef = await addDoc(collection(db, 'books'), bookData);
+        const newBook = { id: docRef.id, ...bookData };
+        commit('addBook', newBook);
       } catch (error) {
         console.error('Failed to create book:', error);
       }
     },
     async updateBook({ commit }, book) {
       try {
-        const response = await axios.put(`http://localhost:3000/books/${book.id}`, book);
-        commit('updateBook', response.data);
+        const bookData = {
+          author: book.author,
+          title: book.title,
+          year: book.year,
+          coverPath: book.coverPath,
+          coverUrl: book.coverUrl,
+          pdfPath: book.pdfPath,
+          pdfUrl: book.pdfUrl,
+          userId: book.userId 
+        };
+        const bookRef = doc(db, 'books', book.id);
+        await updateDoc(bookRef, bookData);
+        commit('updateBook', book);
       } catch (error) {
         console.error('Failed to update book:', error);
       }
     },
     async deleteBook({ commit }, bookId) {
       try {
-        await axios.delete(`http://localhost:3000/books/${bookId}`);
+        await deleteDoc(doc(db, 'books', bookId));
         commit('deleteBook', bookId);
       } catch (error) {
         console.error('Failed to delete book:', error);
@@ -124,6 +148,9 @@ export default createStore({
     },
     allBooks(state) {
       return state.books;
+    },
+    allGenres(state) {
+      return state.genres;
     }
   }
 });
