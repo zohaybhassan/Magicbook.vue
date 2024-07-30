@@ -1,7 +1,7 @@
 import { createStore } from 'vuex';
 import bcrypt from 'bcryptjs';
 import persistState from './persist';
-import { auth, db } from '../main';
+import { auth } from '../firebase.js';
 import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 
@@ -9,7 +9,7 @@ const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD_HASH = bcrypt.hashSync('admin123', 10);
 
 export default createStore({
-  plugins: [persistState(500)], 
+  plugins: [persistState(500)],
   state: {
     user: null,
     books: [],
@@ -54,7 +54,7 @@ export default createStore({
     async registerUser({ commit }, { email, password, confirmPassword }) {
       if (password !== confirmPassword) {
         console.error('Signup error: Passwords do not match');
-        return false; 
+        return false;
       }
 
       try {
@@ -70,7 +70,7 @@ export default createStore({
       try {
         await signOut(auth);
         commit('setUser', null);
-        sessionStorage.removeItem('vuex-state'); 
+        sessionStorage.removeItem('vuex-state');
         return true;
       } catch (error) {
         console.error('Logout error:', error);
@@ -102,7 +102,7 @@ export default createStore({
           coverUrl: book.coverUrl,
           pdfPath: book.pdfPath,
           pdfUrl: book.pdfUrl,
-          userId: book.userId 
+          userId: book.userId
         };
         const docRef = await addDoc(collection(db, 'books'), bookData);
         const newBook = { id: docRef.id, ...bookData };
@@ -121,7 +121,7 @@ export default createStore({
           coverUrl: book.coverUrl,
           pdfPath: book.pdfPath,
           pdfUrl: book.pdfUrl,
-          userId: book.userId 
+          userId: book.userId
         };
         const bookRef = doc(db, 'books', book.id);
         await updateDoc(bookRef, bookData);

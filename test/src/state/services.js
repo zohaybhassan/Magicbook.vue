@@ -3,6 +3,8 @@ import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } f
 import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import bcrypt from 'bcryptjs';
 
+
+
 // Fetch all books from Firestore
 export const fetchBooks = async () => {
   console.log('fetching books service')

@@ -307,33 +307,34 @@ export default {
 .sidebar {
   background-color: #1F2937;
   color: #fff;
-  height: 100%;
+  height: 100vh;
   width: 250px;
   position: fixed;
   top: 0;
   left: 0;
-  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, left 0.3s ease; /* Added transition for left */
-  z-index: 40; /* Ensuring the sidebar is on top */
-  overflow-y: auto; /* Allow scrolling if content overflows */
+  transition: transform 0.3s ease-in-out;
+  z-index: 40;
+  overflow-y: auto;
 }
 
 .sidebar.hidden {
-  width: 0;
-  transform: translateX(-250px);
-  left: -250px; /* Hide sidebar by moving it to the left */
+  transform: translateX(-100%);
 }
-
 .main-content {
   margin-left: 250px;
   padding: 20px;
-  transition: margin-left 0.4s ease-in-out, width 0.4s ease-in-out, transform 0.4s ease-in-out;
+  transition: margin-left 0.3s ease-in-out;
   position: relative;
-  z-index: 1; /* Ensuring the main content is above the overlay */
+  z-index: 1;
   overflow-y: auto;
-  overflow-x: hidden;
-  min-height: 100vh; /* Ensure the content area covers the full viewport height */
+  min-height: 100vh;
+  width: calc(100% - 250px);
 }
 
+.main-content.expanded {
+  margin-left: 0;
+  width: 100%;
+}
 .main-content::before {
   content: "";
   position: fixed; /* Fix the position of the background image */
@@ -349,13 +350,6 @@ export default {
   filter: brightness(50%);
   z-index: -1; /* Position the overlay behind the content */
 }
-
-.main-content.expanded {
-  margin-left: 0;
-  width: 100%;
-  transform: translateX(0);
-}
-
 
 .header {
   display: flex;
