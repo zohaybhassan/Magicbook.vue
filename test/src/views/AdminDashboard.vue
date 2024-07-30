@@ -82,28 +82,36 @@
         </table>
       </div>
 
-      <!-- Add Book Modal -->
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-smoke-light" v-if="showAddBookModal">
-        <div class="bg-white w-full max-w-md p-8 rounded-lg shadow-lg">
-          <h3 class="text-xl font-bold mb-4 text-indigo-700">Add New Book</h3>
-          <form @submit.prevent="createBook">
-            <div class="mb-4">
-              <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
-              <input type="text" id="title" v-model="newBook.title" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            </div>
-            <div class="mb-4">
-              <label for="author" class="block text-sm font-medium text-gray-700">Author</label>
-              <input type="text" id="author" v-model="newBook.author" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            </div>
-            <div class="mb-4">
-              <label for="year" class="block text-sm font-medium text-gray-700">Year</label>
-              <input type="number" id="year" v-model="newBook.year" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            </div>
-            <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition duration-200">Add Book</button>
-          </form>
-          <button @click="showAddBookModal = false" class="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200">Close</button>
+     <!-- Add Book Modal -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-smoke-light" v-if="showAddBookModal">
+    <div class="bg-white w-full max-w-md p-8 rounded-lg shadow-lg">
+      <h3 class="text-xl font-bold mb-4 text-indigo-700">Add New Book</h3>
+      <form @submit.prevent="createBook">
+        <div class="mb-4">
+          <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+          <input type="text" id="title" v-model="newBook.title" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
         </div>
-      </div>
+        <div class="mb-4">
+          <label for="author" class="block text-sm font-medium text-gray-700">Author</label>
+          <input type="text" id="author" v-model="newBook.author" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div class="mb-4">
+          <label for="year" class="block text-sm font-medium text-gray-700">Year</label>
+          <input type="number" id="year" v-model="newBook.year" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div class="mb-4">
+          <label for="pdf" class="block text-sm font-medium text-gray-700">PDF File</label>
+          <input type="file" id="pdf" @change="handlePdfUpload" accept=".pdf" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div class="mb-4">
+          <label for="cover" class="block text-sm font-medium text-gray-700">Book Cover</label>
+          <input type="file" id="cover" @change="handleCoverUpload" accept="image/*" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition duration-200">Add Book</button>
+      </form>
+      <button @click="showAddBookModal = false" class="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200">Close</button>
+    </div>
+  </div>
 
       <!-- Edit Book Modal -->
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-smoke-light" v-if="editBookData.id">
@@ -131,19 +139,21 @@
   </div>
 </template>
 
-
 <script>
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { db, storage, auth } from '@/firebase'; // Make sure to import your Firebase config
 
 export default {
   data() {
     return {
       sidebarOpen: false,
       showAddBookModal: false,
-      books: JSON.parse(localStorage.getItem('books') || '[]'),
-      newBook: { title: '', year: '', author: '' },
+      books: [],
+      newBook: { title: '', year: '', author: '', pdfFile: null, coverImage: null },
       editBookData: {}
     };
   },
@@ -153,7 +163,7 @@ export default {
     
     const logout = async () => {
       await store.dispatch('logout');
-      router.push('/login'); // Navigate to the login page
+      router.push('/login');
     };
 
     return {
@@ -164,46 +174,125 @@ export default {
     toggleSidebar() {
       this.sidebarOpen = !this.sidebarOpen;
     },
-    createBook() {
-    this.books.push({ ...this.newBook, id: Date.now() });
-    localStorage.setItem('books', JSON.stringify(this.books));
-    this.newBook = { title: '', year: '', author: '' };
-    this.showAddBookModal = false;
-    Swal.fire({
-      icon: 'success',
-      title: 'Book Added',
-      text: 'The book has been successfully added.',
-      timer: 2000,
-      showConfirmButton: false
-    });
-  },
-    editBook(book) {
-      this.editBookData = { ...book };
+    handlePdfUpload(event) {
+      this.newBook.pdfFile = event.target.files[0];
     },
-    updateBook() {
-      const index = this.books.findIndex(book => book.id === this.editBookData.id);
-      if (index !== -1) {
-        this.books.splice(index, 1, { ...this.editBookData });
-        localStorage.setItem('books', JSON.stringify(this.books));
-        this.editBookData = {};
+    handleCoverUpload(event) {
+      this.newBook.coverImage = event.target.files[0];
+    },
+    async createBook() {
+      try {
+        // Check if user is authenticated
+        const user = auth.currentUser;
+        if (!user) {
+          throw new Error("User not authenticated");
+        }
+
+        // Upload PDF
+        const pdfRef = ref(storage, `pdfs/${Date.now()}_${this.newBook.pdfFile.name}`);
+        await uploadBytes(pdfRef, this.newBook.pdfFile);
+        const pdfUrl = await getDownloadURL(pdfRef);
+
+        // Upload Cover Image
+        const coverRef = ref(storage, `covers/${Date.now()}_${this.newBook.coverImage.name}`);
+        await uploadBytes(coverRef, this.newBook.coverImage);
+        const coverUrl = await getDownloadURL(coverRef);
+
+        // Add to Firestore
+        const docRef = await addDoc(collection(db, 'books'), {
+          title: this.newBook.title,
+          author: this.newBook.author,
+          year: this.newBook.year,
+          pdfPath: pdfRef.fullPath,
+          coverPath: coverRef.fullPath,
+          pdfUrl: pdfUrl,
+          coverUrl: coverUrl,
+          userId: user.uid  // Add this line to associate the book with the user
+        });
+
+        // Update local state
+        this.books.push({
+          id: docRef.id,
+          ...this.newBook,
+          pdfUrl,
+          coverUrl
+        });
+
+        this.newBook = { title: '', year: '', author: '', pdfFile: null, coverImage: null };
+        this.showAddBookModal = false;
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Book Added',
+          text: 'The book has been successfully added.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error("Error adding book: ", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'There was an error adding the book. Please try again.',
+        });
       }
     },
-   deleteBook(bookId) {
-    this.books = this.books.filter(book => book.id !== bookId);
-    localStorage.setItem('books', JSON.stringify(this.books));
-    Swal.fire({
-      icon: 'success',
-      title: 'Deleted!',
-      text: 'The book has been deleted.',
-      timer: 2000,
-      showConfirmButton: false
-    });
-  } 
-  
-      
+    async deleteBook(bookId) {
+      try {
+        // Find the book in the state
+        const book = this.books.find(b => b.id === bookId);
+        if (!book) {
+          throw new Error("Book not found");
+        }
+
+        // Delete PDF and cover image from storage
+        const pdfRef = ref(storage, book.pdfPath);
+        await deleteObject(pdfRef);
+        const coverRef = ref(storage, book.coverPath);
+        await deleteObject(coverRef);
+
+        // Delete the book document from Firestore
+        await deleteDoc(doc(db, 'books', bookId));
+
+        // Update local state
+        this.books = this.books.filter(b => b.id !== bookId);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Book Deleted',
+          text: 'The book has been successfully deleted.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error("Error deleting book: ", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'There was an error deleting the book. Please try again.',
+        });
+      }
+    },
+    async fetchBooks() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'books'));
+        this.books = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (error) {
+        console.error("Error fetching books: ", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'There was an error fetching the books. Please try again.',
+        });
+      }
+    }
+  },
+  created() {
+    this.fetchBooks();
   }
 };
 </script>
+
 <style scoped>
 /* Custom scrollbar styles */
 .sidebar::-webkit-scrollbar {
@@ -237,34 +326,36 @@ export default {
 .main-content {
   margin-left: 250px;
   padding: 20px;
-  transition: margin-left 0.4s ease-in-out, width 0.4s ease-in-out, transform 0.4s ease-in-out; /* Smooth transition */
-  z-index: 30; /* Ensuring the main content is below the sidebar */
-  position: relative; /* Ensure the overlay is positioned correctly */
-  overflow-y: auto; /* Add vertical scrollbar when content overflows */
-  overflow-x: hidden; /* Prevent horizontal overflow */
+  transition: margin-left 0.4s ease-in-out, width 0.4s ease-in-out, transform 0.4s ease-in-out;
+  position: relative;
+  z-index: 1; /* Ensuring the main content is above the overlay */
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 100vh; /* Ensure the content area covers the full viewport height */
 }
 
 .main-content::before {
   content: "";
-  position: absolute;
+  position: fixed; /* Fix the position of the background image */
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw; /* Ensure it covers the viewport width */
+  height: 100%; /* Ensure it covers the viewport height */
   background-image: url(@/assets/adminbg.jpg); /* Replace with your actual image path */
   background-size: cover;
   background-position: center;
-  background-attachment: fixed; /* Keep the background image fixed */
-  opacity: 1; /* Adjust opacity here */
-  filter: brightness(50%); /* Adjust brightness here */
+  background-attachment: fixed;
+  opacity: 1;
+  filter: brightness(50%);
   z-index: -1; /* Position the overlay behind the content */
 }
 
 .main-content.expanded {
   margin-left: 0;
   width: 100%;
-  transform: translateX(0); /* Ensuring smooth transition */
+  transform: translateX(0);
 }
+
 
 .header {
   display: flex;
