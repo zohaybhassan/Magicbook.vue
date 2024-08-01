@@ -33,17 +33,14 @@
     </div>
   </div>
 </template>
-
 <script>
 import { ref } from 'vue';
-import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase.js';
 import Swal from 'sweetalert2';
-
-const ADMIN_EMAIL = 'admin@example.com'; // Admin email
-const ADMIN_PASSWORD = 'admin123'; // Admin password
+import { interpret } from 'xstate';
+import { bookMachine } from '../state/bookMachine';
+import '../assets/tailwind.css';
+import 'animate.css';
 
 export default {
   name: 'LoginPage',
@@ -51,27 +48,33 @@ export default {
     const email = ref('');
     const password = ref('');
     const capsLockActive = ref(false);
-    const store = useStore();
     const router = useRouter();
 
     const checkCapsLock = (event) => {
       // Check if Caps Lock is active
       capsLockActive.value = event.getModifierState('CapsLock');
     };
-
-    const performLogin = async () => {
-      try {
-        if (email.value === ADMIN_EMAIL && password.value === ADMIN_PASSWORD) {
-          await signInWithEmailAndPassword(auth, email.value, password.value);
-          router.push('/admin');
-          Swal.fire('Success', 'Login successful! \n Welcome to Magic World!', 'success');
-        } else {
-          Swal.fire('Error', 'Invalid credentials or an error occurred.', 'error');
+    
+    const bookService = interpret(bookMachine)
+      .onTransition((state) => {
+        console.log('Current state:', state.value);
+        console.log('Context:', state.context);
+        if (state.matches('authenticated')) {
+          Swal.fire('Success', 'Login successful', 'success');
+          const currentUser = state.context.user;
+          if (currentUser.isAdmin) {
+            router.push('/admin');
+          } else {
+            router.push('/Home');
+          }
+        } else if (state.matches('error')) {
+          Swal.fire('Error', state.context.error || 'Login failed', 'error');
         }
-      } catch (error) {
-        console.error('Login error:', error);
-        Swal.fire('Error', 'Invalid credentials or an error occurred.', 'error');
-      }
+      })
+      .start();
+
+    const performLogin = () => {
+      bookService.send({ type: 'LOGIN', data: { email: email.value, password: password.value } });
     };
 
     return {

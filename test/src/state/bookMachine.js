@@ -7,7 +7,6 @@ export const bookMachine = Machine({
   context: {
     user: null,
     books: [],
-    genres: ['Fiction', 'Non-Fiction', 'Science Fiction', 'Fantasy', 'Mystery', 'Thriller', 'Biography', 'Other'],
     error: null,
   },
   states: {

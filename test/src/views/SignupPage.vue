@@ -7,9 +7,10 @@
         <h1 class="mb-4">Sign Up</h1>
         <form @submit.prevent="performSignup">
           <input v-model="name" type="text" placeholder="Enter your full name" required class="form-control mb-2">
-          <input v-model="email" type="email" placeholder="Enter your email" required class="form-control mb-2">
+           <input v-model="email" type="email" placeholder="Enter your email" required class="form-control mb-2">
           <input v-model="password" type="password" placeholder="Enter your password" required class="form-control mb-2">
-          <input v-model="confirmpassword" type="password" placeholder="Confirm your password" required class="form-control mb-2">
+          <input v-model="confirmPassword" type="password" placeholder="Confirm your password" required class="form-control mb-2">
+          <div v-if="errorShow" class="alert alert-danger">{{ errorMsg }}</div>
           <button type="submit" class="btn btn-success w-100 mb-2">Sign Up</button>
           <p class="text-center">Already have an account? <router-link to="/">Login here</router-link></p>
         </form>
@@ -24,23 +25,19 @@
 
 <script>
 import { ref } from 'vue';
-import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase.js';
 import Swal from 'sweetalert2';
-import { collection, addDoc } from "firebase/firestore";
-import db from '../firebase.js';
+import { registerUser } from '../state/services';
 
 export default {
   name: 'SignupPage',
   setup() {
-    const name = ref('');
     const email = ref('');
     const password = ref('');
-    const confirmpassword = ref('');
-
-    const store = useStore();
+    const confirmPassword = ref('');
+    const isCapsLockOn = ref(false);
+    const errorMsg = ref('');
+    const errorShow = ref(false);
     const router = useRouter();
 
     const performSignup = async () => {
@@ -49,7 +46,7 @@ export default {
         Swal.fire('Error', 'Password must be at least 6 characters long', 'error');
         return;
       }
-      if (password.value !== confirmpassword.value) {
+      if (password.value !== confirmPassword.value) {
         Swal.fire('Error', 'Passwords do not match', 'error');
         return;
       }
@@ -61,16 +58,7 @@ export default {
       }
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
-        const user = userCredential.user;
-
-        // Add user to Firestore
-        await addDoc(collection(db, "users"), {
-          uid: user.uid,
-          name: name.value,
-          email: email.value
-        });
-
+        await registerUser({ email: email.value, password: password.value });
         router.push('/login');
         Swal.fire('Success', 'Signup successful. Please login.', 'success');
       } catch (error) {
@@ -82,7 +70,10 @@ export default {
       name,
       email,
       password,
-      confirmpassword,
+      confirmPassword,
+      isCapsLockOn,
+      errorMsg,
+      errorShow,
       performSignup
     };
   }

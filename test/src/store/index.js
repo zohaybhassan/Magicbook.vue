@@ -1,18 +1,20 @@
 import { createStore } from 'vuex';
 import bcrypt from 'bcryptjs';
 import persistState from './persist';
-import { auth } from '../firebase.js';
+import { auth } from '../main';
 import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, where, query } from 'firebase/firestore';
+import { db } from '../main';
 
-const ADMIN_EMAIL = 'admin@example.com';
-const ADMIN_PASSWORD_HASH = bcrypt.hashSync('admin123', 10);
+const ADMIN_EMAIL = 'admin@zohaib.com';
+const ADMIN_PASSWORD_HASH = bcrypt.hashSync('16951', 10);
 
 export default createStore({
   plugins: [persistState(500)],
   state: {
     user: null,
     books: [],
+    borrowedBooks: [],
     genres: ['Fiction', 'Non-Fiction', 'Science Fiction', 'Fantasy', 'Mystery', 'Thriller', 'Biography', 'Other']
   },
   mutations: {
@@ -21,6 +23,9 @@ export default createStore({
     },
     setBooks(state, books) {
       state.books = books;
+    },
+    setBorrowedBooks(state, borrowedBooks) {
+      state.borrowedBooks = borrowedBooks;
     },
     addBook(state, book) {
       state.books.push(book);
@@ -33,6 +38,12 @@ export default createStore({
     },
     deleteBook(state, bookId) {
       state.books = state.books.filter(book => book.id !== bookId);
+    },
+    borrowBook(state, borrowedBook) {
+      state.borrowedBooks.push(borrowedBook);
+    },
+    returnBook(state, borrowedBookId) {
+      state.borrowedBooks = state.borrowedBooks.filter(book => book.id !== borrowedBookId);
     }
   },
   actions: {
@@ -44,6 +55,7 @@ export default createStore({
         try {
           const userCredential = await signInWithEmailAndPassword(auth, email, password);
           commit('setUser', { email: userCredential.user.email, uid: userCredential.user.uid });
+          sessionStorage.setItem('vuex-state', JSON.stringify({ user: { email: userCredential.user.email, uid: userCredential.user.uid } }));
           return true;
         } catch (error) {
           console.error('Login error:', error);
@@ -60,6 +72,7 @@ export default createStore({
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         commit('setUser', { email: userCredential.user.email, uid: userCredential.user.uid });
+        sessionStorage.setItem('vuex-state', JSON.stringify({ user: { email: userCredential.user.email, uid: userCredential.user.uid } }));
         return true;
       } catch (error) {
         console.error('Signup error:', error);
@@ -92,18 +105,28 @@ export default createStore({
         console.error('Failed to fetch books:', error);
       }
     },
-    async createBook({ commit }, book) {
+    async fetchBorrowedBooks({ commit, state }) {
+      if (!state.user || !state.user.uid) {
+        console.error('User not authenticated');
+        return;
+      }
+
       try {
-        const bookData = {
-          author: book.author,
-          title: book.title,
-          year: book.year,
-          coverPath: book.coverPath,
-          coverUrl: book.coverUrl,
-          pdfPath: book.pdfPath,
-          pdfUrl: book.pdfUrl,
-          userId: book.userId
-        };
+        const q = query(collection(db, 'borrowedBooks'), where('uid', '==', state.user.uid));
+        const querySnapshot = await getDocs(q);
+        const borrowedBooks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        commit('setBorrowedBooks', borrowedBooks);
+      } catch (error) {
+        console.error('Failed to fetch borrowed books:', error);
+      }
+    },
+    async createBook({ commit }, book) {
+      const bookData = {
+        author: book.author,
+        title: book.title,
+        year: book.year,
+      };
+      try {
         const docRef = await addDoc(collection(db, 'books'), bookData);
         const newBook = { id: docRef.id, ...bookData };
         commit('addBook', newBook);
@@ -113,18 +136,8 @@ export default createStore({
     },
     async updateBook({ commit }, book) {
       try {
-        const bookData = {
-          author: book.author,
-          title: book.title,
-          year: book.year,
-          coverPath: book.coverPath,
-          coverUrl: book.coverUrl,
-          pdfPath: book.pdfPath,
-          pdfUrl: book.pdfUrl,
-          userId: book.userId
-        };
         const bookRef = doc(db, 'books', book.id);
-        await updateDoc(bookRef, bookData);
+        await updateDoc(bookRef, book);
         commit('updateBook', book);
       } catch (error) {
         console.error('Failed to update book:', error);
@@ -136,6 +149,34 @@ export default createStore({
         commit('deleteBook', bookId);
       } catch (error) {
         console.error('Failed to delete book:', error);
+      }
+    },
+    async borrowBook({ commit, state }, bookId) {
+      if (!state.user || !state.user.uid) {
+        console.error('User not authenticated');
+        return;
+      }
+
+      const borrowedBookData = {
+        uid: state.user.uid,
+        bookId,
+        borrowDate: new Date().toISOString(),
+      };
+
+      try {
+        const docRef = await addDoc(collection(db, 'borrowedBooks'), borrowedBookData);
+        const borrowedBook = { id: docRef.id, ...borrowedBookData };
+        commit('borrowBook', borrowedBook);
+      } catch (error) {
+        console.error('Failed to borrow book:', error);
+      }
+    },
+    async returnBook({ commit }, borrowedBookId) {
+      try {
+        await deleteDoc(doc(db, 'borrowedBooks', borrowedBookId));
+        commit('returnBook', borrowedBookId);
+      } catch (error) {
+        console.error('Failed to return book:', error);
       }
     }
   },
@@ -151,6 +192,9 @@ export default createStore({
     },
     allGenres(state) {
       return state.genres;
+    },
+    allBorrowedBooks(state) {
+      return state.borrowedBooks;
     }
   }
 });

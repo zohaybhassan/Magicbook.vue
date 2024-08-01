@@ -18,22 +18,13 @@
         <nav class="mt-6">
           <ul class="space-y-4">
             <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white active-sidebar-item">Dashboard</a>
+              <router-link to="/admin" class="text-gray-300 hover:text-white">Dashboard</router-link>
             </li>
             <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white">Books Category</a>
+              <router-link to="/bookscat" class="text-gray-300 hover:text-white">Book Categories</router-link>
             </li>
             <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white">Manage Sales</a>
-            </li>
-            <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white">Books Section</a>
-            </li>
-            <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white">User Management</a>
-            </li>
-            <li class="px-6">
-              <a href="#" class="text-gray-300 hover:text-white">Transaction History</a>
+              <router-link to="/books" class="text-gray-300 hover:text-white">Books</router-link>
             </li>
           </ul>
         </nav>
@@ -60,19 +51,19 @@
         <table>
           <thead>
             <tr>
-              <th>#</th>
               <th>Book Title</th>
               <th>Year</th>
               <th>Author</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(book, index) in books" :key="book.id">
-              <td>{{ index + 1 }}</td>
               <td>{{ book.title }}</td>
               <td>{{ book.year }}</td>
               <td>{{ book.author }}</td>
+              <td>{{ book.borrowed ? 'Borrowed' : 'Available' }}</td>
               <td>
                 <button @click="editBook(book)" class="bg-blue-500 text-white px-2 py-1 rounded-lg hover:bg-blue-600 transition duration-200">Edit</button>
                 <button @click="deleteBook(book.id)" class="bg-red-500 text-white px-2 py-1 rounded-lg hover:bg-red-600 transition duration-200 ml-2">Delete</button>
@@ -82,36 +73,28 @@
         </table>
       </div>
 
-     <!-- Add Book Modal -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-smoke-light" v-if="showAddBookModal">
-    <div class="bg-white w-full max-w-md p-8 rounded-lg shadow-lg">
-      <h3 class="text-xl font-bold mb-4 text-indigo-700">Add New Book</h3>
-      <form @submit.prevent="createBook">
-        <div class="mb-4">
-          <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
-          <input type="text" id="title" v-model="newBook.title" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+      <!-- Add Book Modal -->
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-smoke-light" v-if="showAddBookModal">
+        <div class="bg-white w-full max-w-md p-8 rounded-lg shadow-lg">
+          <h3 class="text-xl font-bold mb-4 text-indigo-700">Add New Book</h3>
+          <form @submit.prevent="createBook">
+            <div class="mb-4">
+              <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+              <input type="text" id="title" v-model="newBook.title" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div class="mb-4">
+              <label for="author" class="block text-sm font-medium text-gray-700">Author</label>
+              <input type="text" id="author" v-model="newBook.author" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div class="mb-4">
+              <label for="year" class="block text-sm font-medium text-gray-700">Year</label>
+              <input type="number" id="year" v-model="newBook.year" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition duration-200">Add Book</button>
+          </form>
+          <button @click="showAddBookModal = false" class="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200">Close</button>
         </div>
-        <div class="mb-4">
-          <label for="author" class="block text-sm font-medium text-gray-700">Author</label>
-          <input type="text" id="author" v-model="newBook.author" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div class="mb-4">
-          <label for="year" class="block text-sm font-medium text-gray-700">Year</label>
-          <input type="number" id="year" v-model="newBook.year" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div class="mb-4">
-          <label for="pdf" class="block text-sm font-medium text-gray-700">PDF File</label>
-          <input type="file" id="pdf" @change="handlePdfUpload" accept=".pdf" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div class="mb-4">
-          <label for="cover" class="block text-sm font-medium text-gray-700">Book Cover</label>
-          <input type="file" id="cover" @change="handleCoverUpload" accept="image/*" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition duration-200">Add Book</button>
-      </form>
-      <button @click="showAddBookModal = false" class="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200">Close</button>
-    </div>
-  </div>
+      </div>
 
       <!-- Edit Book Modal -->
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-smoke-light" v-if="editBookData.id">
@@ -138,163 +121,130 @@
     </div>
   </div>
 </template>
-
 <script>
-import { useStore } from 'vuex';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import { db, storage, auth } from '@/firebase'; // Make sure to import your Firebase config
+import { interpret } from 'xstate';
+import { bookMachine } from '../state/bookMachine'; // Ensure the correct path
 
 export default {
-  data() {
-    return {
-      sidebarOpen: false,
-      showAddBookModal: false,
-      books: [],
-      newBook: { title: '', year: '', author: '', pdfFile: null, coverImage: null },
-      editBookData: {}
-    };
-  },
+  name: 'AdminDashboard',
   setup() {
-    const store = useStore();
     const router = useRouter();
-    
-    const logout = async () => {
-      await store.dispatch('logout');
+    const bookService = interpret(bookMachine).start();
+    const sidebarOpen = ref(true);
+    const newBook = ref({ title: '', author: '', year: '' });
+    const editBookData = ref({ id: '', title: '', author: '', year: '' });
+    const showAddBookModal = ref(false);
+    const books = ref([]);
+
+    // Fetch books on startup
+    bookService.send({ type: 'FETCH_BOOKS' });
+
+    bookService.onTransition((state) => {
+      if (state.matches('authenticated')) {
+        books.value = state.context.books;
+      } else if (state.matches('error')) {
+        Swal.fire('Error', state.context.error, 'error');
+      }
+    });
+
+    const createBook = async () => {
+      if (newBook.value.title && newBook.value.author && newBook.value.year) {
+        try {
+          bookService.send({ type: 'CREATE_BOOK', data: newBook.value });
+          newBook.value = { title: '', author: '', year: '' };
+          showAddBookModal.value = false;
+          await Swal.fire({
+            title: 'Added!',
+            text: 'The book has been added successfully.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3085d6',
+            timer: 2000,
+          });
+        } catch (error) {
+          Swal.fire('Error', 'Failed to add the book. Please try again.', 'error');
+        }
+      } else {
+        Swal.fire('Error', 'Please fill all fields', 'error');
+      }
+    };
+
+    const editBook = (book) => {
+      editBookData.value = { ...book };
+    };
+
+    const updateBook = async () => {
+      if (editBookData.value.title && editBookData.value.author && editBookData.value.year) {
+        try {
+          bookService.send({ type: 'UPDATE_BOOK', data: editBookData.value });
+          editBookData.value = { id: '', title: '', author: '', year: '' };
+          await Swal.fire({
+            title: 'Updated!',
+            text: 'The book details have been updated successfully.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3085d6',
+            timer: 2000,
+          });
+        } catch (error) {
+          Swal.fire('Error', 'Failed to update the book. Please try again.', 'error');
+        }
+      } else {
+        Swal.fire('Error', 'Please fill all fields', 'error');
+      }
+    };
+
+    const deleteBook = async (id) => {
+      try {
+        bookService.send({ type: 'DELETE_BOOK', data: id });
+        await Swal.fire({
+          title: 'Deleted!',
+          text: 'The book has been deleted successfully.',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#3085d6',
+          timer: 2000,
+        });
+      } catch (error) {
+        Swal.fire('Error', 'Failed to delete the book. Please try again.', 'error');
+      }
+    };
+
+    const logout = () => {
+      bookService.send({ type: 'LOGOUT' });
       router.push('/login');
     };
 
+    const toggleSidebar = () => {
+      sidebarOpen.value = !sidebarOpen.value;
+    };
+
+    onMounted(() => {
+      bookService.send({ type: 'FETCH_BOOKS' });
+    });
+
     return {
-      logout
+      books,
+      newBook,
+      editBookData,
+      showAddBookModal,
+      createBook,
+      editBook,
+      updateBook,
+      deleteBook,
+      logout,
+      toggleSidebar,
+      sidebarOpen,
     };
   },
-  methods: {
-    toggleSidebar() {
-      this.sidebarOpen = !this.sidebarOpen;
-    },
-    handlePdfUpload(event) {
-      this.newBook.pdfFile = event.target.files[0];
-    },
-    handleCoverUpload(event) {
-      this.newBook.coverImage = event.target.files[0];
-    },
-    async createBook() {
-      try {
-        // Check if user is authenticated
-        const user = auth.currentUser;
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
-
-        // Upload PDF
-        const pdfRef = ref(storage, `pdfs/${Date.now()}_${this.newBook.pdfFile.name}`);
-        await uploadBytes(pdfRef, this.newBook.pdfFile);
-        const pdfUrl = await getDownloadURL(pdfRef);
-
-        // Upload Cover Image
-        const coverRef = ref(storage, `covers/${Date.now()}_${this.newBook.coverImage.name}`);
-        await uploadBytes(coverRef, this.newBook.coverImage);
-        const coverUrl = await getDownloadURL(coverRef);
-
-        // Add to Firestore
-        const docRef = await addDoc(collection(db, 'books'), {
-          title: this.newBook.title,
-          author: this.newBook.author,
-          year: this.newBook.year,
-          pdfPath: pdfRef.fullPath,
-          coverPath: coverRef.fullPath,
-          pdfUrl: pdfUrl,
-          coverUrl: coverUrl,
-          userId: user.uid  // Add this line to associate the book with the user
-        });
-
-        // Update local state
-        this.books.push({
-          id: docRef.id,
-          ...this.newBook,
-          pdfUrl,
-          coverUrl
-        });
-
-        this.newBook = { title: '', year: '', author: '', pdfFile: null, coverImage: null };
-        this.showAddBookModal = false;
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Book Added',
-          text: 'The book has been successfully added.',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      } catch (error) {
-        console.error("Error adding book: ", error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'There was an error adding the book. Please try again.',
-        });
-      }
-    },
-    async deleteBook(bookId) {
-      try {
-        // Find the book in the state
-        const book = this.books.find(b => b.id === bookId);
-        if (!book) {
-          throw new Error("Book not found");
-        }
-
-        // Delete PDF and cover image from storage
-        const pdfRef = ref(storage, book.pdfPath);
-        await deleteObject(pdfRef);
-        const coverRef = ref(storage, book.coverPath);
-        await deleteObject(coverRef);
-
-        // Delete the book document from Firestore
-        await deleteDoc(doc(db, 'books', bookId));
-
-        // Update local state
-        this.books = this.books.filter(b => b.id !== bookId);
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Book Deleted',
-          text: 'The book has been successfully deleted.',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      } catch (error) {
-        console.error("Error deleting book: ", error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'There was an error deleting the book. Please try again.',
-        });
-      }
-    },
-    async fetchBooks() {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'books'));
-        this.books = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      } catch (error) {
-        console.error("Error fetching books: ", error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'There was an error fetching the books. Please try again.',
-        });
-      }
-    }
-  },
-  created() {
-    this.fetchBooks();
-  }
 };
 </script>
 
+
 <style scoped>
-/* Custom scrollbar styles */
 .sidebar::-webkit-scrollbar {
   width: 8px;
 }
@@ -320,6 +270,7 @@ export default {
 .sidebar.hidden {
   transform: translateX(-100%);
 }
+
 .main-content {
   margin-left: 250px;
   padding: 20px;
@@ -335,58 +286,59 @@ export default {
   margin-left: 0;
   width: 100%;
 }
+
 .main-content::before {
   content: "";
-  position: fixed; /* Fix the position of the background image */
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100vw; /* Ensure it covers the viewport width */
-  height: 100%; /* Ensure it covers the viewport height */
-  background-image: url(@/assets/adminbg.jpg); /* Replace with your actual image path */
+  width: 100vw;
+  height: 100%;
+  background-image: url(@/assets/adminbg.jpg);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   opacity: 1;
   filter: brightness(50%);
-  z-index: -1; /* Position the overlay behind the content */
+  z-index: -1;
 }
 
 .header {
   display: flex;
   align-items: center;
-  justify-content: center; /* Center heading */
+  justify-content: center;
   position: relative;
   width: 100%;
   margin-bottom: 20px;
 }
 
 .book-details-heading {
-  font-family: 'Lobster', cursive; /* Apply the custom font */
-  font-size: 2rem; /* Adjust the size as needed */
+  font-family: 'Lobster', cursive;
+  font-size: 2rem;
   color: #ffffff;
   text-align: center;
-  border: 2px solid #ffffff; /* White border */
-  border-radius: 8px; /* Rounded corners */
-  padding: 10px 20px; /* Padding around the text */
-  background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent background */
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .logout-button {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: #e53e3e; /* Red background */
+  background-color: #e53e3e;
   color: #ffffff;
   padding: 8px 16px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-size: 0.875rem; /* Slightly smaller font size */
+  font-size: 0.875rem;
   transition: background-color 0.2s ease;
 }
 
 .logout-button:hover {
-  background-color: #c53030; /* Darker red on hover */
+  background-color: #c53030;
 }
 
 .table-container {
@@ -427,11 +379,11 @@ button:focus {
 }
 
 .active-sidebar-item {
-  border-left: 4px solid #6366F1; /* Indicating the active state */
-  background-color: rgba(99, 102, 241, 0.1); /* Light background for active item */
+  border-left: 4px solid #6366F1;
+  background-color: rgba(99, 102, 241, 0.1);
 }
 
 a:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Changing color on hover */
+  background-color: rgba(255, 255, 255, 0.1);
 }
 </style>

@@ -4,6 +4,9 @@ import LoginPage from '../views/LoginPage.vue';
 import SignupPage from '../views/SignupPage.vue';
 import AdminDashboard from '../views/AdminDashboard.vue';
 import HomePage from '../views/Home.vue'; // Import the Home component
+import bookscat from '../views/bookscat.vue';
+import BooksNumber from '../views/books.vue'; // Import the new component
+
 
 const routes = [
   {
@@ -23,9 +26,21 @@ const routes = [
     meta: { requiresUnauth: true }  // Only accessible if not authenticated
   },
   {
+    path: '/books', 
+    name: 'BooksNumber',
+    component: BooksNumber,
+    meta: { requiresUnauth: true }  // Only accessible if not authenticated
+  },
+  {
     path: '/admin',
     name: 'Admin',
     component: AdminDashboard,
+    meta: { requiresAuth: true }  // Requires user to be authenticated
+  },
+  {
+    path: '/bookscat',
+    name: 'bookscat',
+    component: bookscat,
     meta: { requiresAuth: true }  // Requires user to be authenticated
   },
   {

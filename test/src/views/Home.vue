@@ -3,93 +3,92 @@
     <el-button class="logout-button" type="danger" @click="onLogout">Logout</el-button>
     <el-card class="welcome-card" shadow="hover">
       <div slot="header" class="clearfix">
-        <span class="card-header">Library Dashboard</span>
+        <span class="card-header">User Dashboard</span>
       </div>
-      <el-form :model="form" label-width="auto" style="max-width: 600px; margin: auto;">
-        <el-form-item label="Book Name">
-          <el-input v-model="form.name" placeholder="Enter the book name" />
-        </el-form-item>
-        <el-form-item label="Category">
-          <el-select v-model="form.category" placeholder="Select category">
-            <el-option label="Fiction" value="fiction" />
-            <el-option label="Non-Fiction" value="non-fiction" />
-            <el-option label="Science" value="science" />
-            <el-option label="Technology" value="technology" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="Author">
-          <el-input v-model="form.author" placeholder="Enter the author name" />
-        </el-form-item>
-        <el-form-item label="Publish Date">
-          <el-date-picker v-model="form.publishDate" type="date" placeholder="Select publish date" style="width: 100%;" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="onBorrow">Borrow</el-button>
-          <el-button type="success" @click="onBuy">Buy</el-button>
-          <el-button type="danger" @click="onSell">Sell</el-button>
-        </el-form-item>
-      </el-form>
+      <el-table :data="books" style="width: 100%">
+        <el-table-column prop="title" label="Book Title" />
+        <el-table-column prop="author" label="Author" />
+        <el-table-column prop="year" label="Year" />
+        <el-table-column label="Actions">
+          <template #default="scope">
+            <el-button 
+              type="primary" 
+              @click="onBorrow(scope.row)" 
+              :disabled="scope.row.borrowed"
+            >
+              {{ scope.row.borrowed ? 'Borrowed' : 'Borrow' }}
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
     </el-card>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted } from 'vue'
+import Swal from 'sweetalert2'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
-const form = reactive({
-  name: '',
-  category: '',
-  author: '',
-  publishDate: '',
-})
-
+const books = ref([])
 const store = useStore()
 const router = useRouter()
 
-const onBorrow = () => {
-  ElMessage({
-    message: 'Book borrowed successfully!',
-    type: 'success',
-    duration: 2000
-  })
+const fetchBooks = async () => {
+  await store.dispatch('fetchBooks')
+  books.value = store.state.books
 }
 
-const onBuy = () => {
-  ElMessage({
-    message: 'Book bought successfully!',
-    type: 'success',
-    duration: 2000
-  })
-}
-
-const onSell = () => {
-  ElMessage({
-    message: 'Book sold successfully!',
-    type: 'success',
-    duration: 2000
-  })
+const onBorrow = async (book) => {
+  try {
+    await store.dispatch('borrowBook', book.id)
+    await Swal.fire({
+      title: 'Success',
+      text: `You have borrowed "${book.title}" successfully!`,
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#3085d6',
+      timer: 2000
+    })
+    fetchBooks() // Refresh the book list
+  } catch (error) {
+    console.error('Borrow action failed:', error)
+    Swal.fire({
+      title: 'Error',
+      text: 'Failed to borrow the book. Please try again.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#e53e3e',
+    })
+  }
 }
 
 const onLogout = () => {
   store.dispatch('logout').then(() => {
-    ElMessage({
-      message: 'Logged out successfully!',
-      type: 'success',
-      duration: 2000
-    })
     router.push('/login')
+  }).then(() => {
+    Swal.fire({
+      title: 'Logged out',
+      text: 'You have been logged out successfully!',
+      icon: 'info',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#3085d6',
+      timer: 2000
+    })
   })
 }
 
 // Display welcome message when routed to this page
 onMounted(() => {
-  ElMessage({
-    message: 'Welcome User!',
-    type: 'success',
-    duration: 3000
+  fetchBooks()
+  Swal.fire({
+    title: 'Welcome!',
+    text: 'Welcome User!',
+    icon: 'success',
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#3085d6',
+    timer: 3000
   })
 })
 </script>
@@ -100,7 +99,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-image: url('path/to/your/background-image.jpg');
+  background-image: url('@/assets/adminbg.jpg'); /* Use the same background image as admin dashboard */
   background-size: cover;
   background-position: center;
   position: relative;
@@ -127,22 +126,12 @@ onMounted(() => {
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.8); /* Slightly translucent background for the card */
 }
 
 .card-header {
   font-size: 24px;
   font-weight: bold;
   text-align: center;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.el-form-item {
-  margin-bottom: 20px;
-}
-
-.el-button {
-  margin-right: 10px;
 }
 </style>
