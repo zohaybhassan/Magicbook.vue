@@ -62,7 +62,6 @@
 import { ref } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import Swal from 'sweetalert2';
 
 export default {
   name: 'BookCategories',
@@ -281,4 +280,3 @@ export default {
   visibility: visible;
 }
 </style>
-

@@ -1,4 +1,12 @@
 {
+  "name": "magicbook-vue",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix test run dev",
+    "build": "npm --prefix test run build",
+    "lint": "npm --prefix test run lint",
+    "format": "npm --prefix test run format"
+  },
   "devDependencies": {
     "bootstrap": "^4.0.0-beta",
     "jquery": "^3.7.1",

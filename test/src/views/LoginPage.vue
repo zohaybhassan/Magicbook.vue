@@ -65,7 +65,7 @@ export default {
           if (currentUser.isAdmin) {
             router.push('/admin');
           } else {
-            router.push('/Home');
+            router.push('/home');
           }
         } else if (state.matches('error')) {
           Swal.fire('Error', state.context.error || 'Login failed', 'error');

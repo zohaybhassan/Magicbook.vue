@@ -57,8 +57,8 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  void from;
   const isAuthenticated = store.getters.isAuthenticated;
-  const currentUser = store.getters.currentUser;
 
   if (isAuthenticated) {
     if (to.path === '/signup') {
@@ -67,8 +67,6 @@ router.beforeEach((to, from, next) => {
       store.dispatch('logout').then(() => {
         next('/login'); // Redirect to login page after logout
       });
-    } else if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
-      next('/login');
     } else {
       next();
     }
@@ -82,5 +80,3 @@ router.beforeEach((to, from, next) => {
 });
 
 export default router;
-
-

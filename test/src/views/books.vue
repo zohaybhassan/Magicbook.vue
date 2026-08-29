@@ -54,7 +54,6 @@
 import { ref, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import Swal from 'sweetalert2';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/main.js';
 

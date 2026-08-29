@@ -2,9 +2,11 @@
   <div class="library-dashboard">
     <el-button class="logout-button" type="danger" @click="onLogout">Logout</el-button>
     <el-card class="welcome-card" shadow="hover">
-      <div slot="header" class="clearfix">
+      <template v-slot:header>
+<div  class="clearfix">
         <span class="card-header">User Dashboard</span>
       </div>
+</template>
       <el-table :data="books" style="width: 100%">
         <el-table-column prop="title" label="Book Title" />
         <el-table-column prop="author" label="Author" />
@@ -30,6 +32,10 @@ import { ref, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+
+defineOptions({
+  name: 'HomePage'
+})
 
 const books = ref([])
 const store = useStore()
